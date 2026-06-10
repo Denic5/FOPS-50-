@@ -1,0 +1,38 @@
+---
+- name: Install PostgreSQL on database server
+  gather_facts: true
+  hosts: databases
+  vars:
+    ansible_ssh_user: user
+  become: yes
+
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install PostgreSQL
+      apt:
+        name:
+          - postgresql
+          - postgresql-contrib
+        state: present
+
+    - name: Ensure PostgreSQL is running
+      systemd:
+        name: postgresql
+        state: started
+        enabled: yes
+
+    - name: Check PostgreSQL service status
+      systemd:
+        name: postgresql
+      register: postgresql_status
+
+    - name: Display PostgreSQL status
+      debug:
+        msg:
+          - "Service: postgresql"
+          - "Active: {{ postgresql_status.status.ActiveState }}"
+          - "Loaded: {{ postgresql_status.status.LoadState }}"
